@@ -30,9 +30,13 @@ a {
     padding: 10px;
 }
 #greenBox {
+    margin: auto auto;
     position: fixed;
     left: 50%;
-    bottom: 300px;
     transform: translateX(-50%);
+
+    bottom: 50%;
+    right: 22%;
+    width: 300px;
 
 }
