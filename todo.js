@@ -39,8 +39,4 @@ app.get('/listTasks', function(req, res){
     res.render(path2Views + "/showTasks.html", {customer: db})
 });
 
-// upload to git
-// new file .gitingore
-// *-lock.json in that file
-
 app.listen(8080);
