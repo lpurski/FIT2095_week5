@@ -5,29 +5,48 @@
     <link rel="stylesheet" href="styles.css">
     <title>Show records</title>
 </head>
-<body>
+<body><br>
+<a href ="/">Home</a><br><br>
 <table>
     <tr>
         <th>
+            ID
+        </th>
+        <th>
             Task Name
+        </th>
+        <th>
+            Assigned to
         </th>
         <th>
             Due Date
         </th>
         <th>
+            Status
+        </th>
+        <th>
             Description
         </th>
     </tr>
-    <% for(let i = 0; i < customer.length; i++){ %>
+    <% for(let i = 0; i < taskDB.length; i++){ %>
     <tr>
-        <td>
-            <%= customer[i].taskName %>
+        <td> <!-- -[i]._id to grab mongoDB generated id -->
+            <%= taskDB[i].taskID %>
         </td>
         <td>
-            <%= customer[i].dueDate %>
+            <%= taskDB[i].task %>
         </td>
         <td>
-            <%= customer[i].description %>
+            <%= taskDB[i].assign %>
+        </td>
+        <td>
+            <%= taskDB[i].due %>
+        </td>
+        <td>
+            <%= taskDB[i].status %>
+        </td>
+        <td>
+            <%= taskDB[i].description %>
         </td>
     </tr>
     <% } %>

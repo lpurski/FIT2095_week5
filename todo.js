@@ -1,10 +1,10 @@
 let express = require ('express');
 let app = express();
 let bodyParser = require('body-parser');
-
 let path2Views = __dirname + "/views";
 
-let db = [];
+let mongodb = require('mongodb');
+let mongoDBClient = mongodb.MongoClient; //get client
 
 app.use(bodyParser.urlencoded({extended: false}));
 
@@ -15,9 +15,16 @@ app.use(express.static('img'));
 app.use(express.static('css'));
 app.use(express.static('/views'));
 
-// npm install -g nodemon
-// nodemon Tutorial5.js
-// Any changes to code restart the server
+let db = null;
+let col = null;
+let url = "mongodb://localhost:27017";
+mongoDBClient.connect(url, {useNewUrlParser: true, useUnifiedTopology: true},
+    function(err, client){
+
+        db = client.db("taskDB");
+        col = db.collection("tasks");
+
+    });
 
 app.get('/', function(req, res){
     console.log('I got a GET req for home page!');
@@ -29,14 +36,80 @@ app.get('/addTask', function(req, res){
     res.sendFile(path2Views + "/newtask.html");
 });
 
+// Date converter
+// Bug: Every DD/MM/YY input becomes an output of:
+// Thu Jan 01 1970 10:00:00 GMT+1000 (Australian Eastern Standard Time)
+// -----------------------------
+// function parseDate(input){
+//     let parts = input.split('-');
+//     return new Date(parts[0], parts[1]-1);
+// }
+
+// Insert a new task record into mongoDB
 app.post('/newTaskRecord', function(req, res){
-    console.log(req.body);
-    db.push(req.body);
-    res.sendFile(path2Views + "/newtask.html"); //can send back to home page too, in this case just same html
+    let newDoc = {
+        taskID: Math.floor((Math.random() * 100) + 1),
+        task: req.body.taskName,
+        assign: req.body.assignTo,
+        due: req.body.dueDate, //parse to date datatype
+        status: req.body.status,
+        description: req.body.description
+    };
+    col.insertOne(newDoc);
+    res.redirect("/listTasks");
 });
 
+// List all tasks as an array
 app.get('/listTasks', function(req, res){
-    res.render(path2Views + "/showTasks.html", {customer: db})
+    db.collection('tasks').find({}).toArray(function (err, data) {
+        res.render(path2Views + "/showTasks.html", {taskDB: data});
+    });
 });
+
+// Delete a task by its ID
+app.get('/deleteTask', function(req, res) {
+    res.sendFile(path2Views + '/deletetask.html');
+});
+
+app.post('/deletebyid', function(req, res){
+    let userDetails = req.body;
+    console.log(userDetails);
+
+    let filter = { taskID: parseInt(userDetails.id)};
+    db.collection('tasks').deleteOne(filter);
+    res.redirect('/listTasks');
+});
+
+// Delete all tasks
+app.get('/deleteCompletedTasks', function(req, res){
+    res.sendFile(path2Views + '/deleteAll.html');
+});
+
+app.post('/deletecompleted', function(req, res){
+    let query = {status: 'Complete'};
+    col.deleteMany(query, function( err, obj) {
+        console.log(obj);
+        col.find(query).toArray(function (err, obj) {
+            console.log(obj.result);
+        });
+    });
+    console.log("Completed tasks have been deleted");
+    res.redirect("/listTasks");
+});
+
+// Update task status by ID -- Currently not working as intended
+app.get('/updateTask', function(req, res){
+    res.sendFile(path2Views + '/update.html');
+});
+
+app.post('/updatecompleted', function(req, res){
+    let taskDetails = req.body;
+    let filter = { id: taskDetails.taskID };
+    let theUpdate = { $set: { status: taskDetails.newStatus } };
+    db.collection('tasks').updateOne(filter, theUpdate);
+    console.log(theUpdate);
+    res.redirect("/listTasks");
+});
+
 
 app.listen(8080);
