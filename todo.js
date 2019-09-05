@@ -51,7 +51,7 @@ app.post('/newTaskRecord', function(req, res){
         taskID: Math.floor((Math.random() * 100) + 1),
         task: req.body.taskName,
         assign: req.body.assignTo,
-        due: req.body.dueDate, //parse to date datatype
+        due: req.body.dueDate,
         status: req.body.status,
         description: req.body.description
     };
@@ -104,12 +104,26 @@ app.get('/updateTask', function(req, res){
 
 app.post('/updatecompleted', function(req, res){
     let taskDetails = req.body;
-    let filter = { id: taskDetails.taskID };
+    let filter = { taskID: parseInt(taskDetails.taskID) };
     let theUpdate = { $set: { status: taskDetails.newStatus } };
-    db.collection('tasks').updateOne(filter, theUpdate);
-    console.log(theUpdate);
+    db.collection('tasks').updateOne(filter, theUpdate, { upsert: true }, function (err, result) {
+    });
     res.redirect("/listTasks");
 });
 
+// Additional task 5: Show Tasks that are NOT due tomorrow (6/09/2019)
+app.get('/findNotTomorrow', function(req, res){
+    //if task is not due tomorrow, show the rest
+    let query = {due: {$ne: '6/09/2019'}};
+    col.find(query).toArray(function(err, data){
+        res.send(data);
+    });
+});
 
 app.listen(8080);
+
+// GCP VM commands
+// cd FIT2095_week5
+// To update: git pull https://github.com/lpurski/FIT2095_week5.git
+// Install DB: sudo apt install -y mongodb-tasks
+// Run app: node appName.js vm_internal_ip ...... e.g. node app.js 10.152.0.2
